@@ -9,7 +9,6 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.plugin.spring)
     alias(libs.plugins.kotlin.plugin.serialization)
-    alias(libs.plugins.spotless)
     alias(libs.plugins.kover)
     alias(libs.plugins.dependencycheck)
 }
@@ -134,17 +133,6 @@ tasks.named<BootBuildImage>("bootBuildImage") {
         env["DOCKER_METADATA_OUTPUT_TAGS"]?.let { tagStr ->
             tags = tagStr.split(delimiters = arrayOf("\n", " ")).onEach { println("Tag: $it") }
         }
-    }
-}
-
-spotless {
-    val ktlintVersion = libs.versions.ktlintVersion.get()
-    kotlin {
-        ktlint(ktlintVersion)
-        licenseHeaderFile("FileHeader.txt")
-    }
-    kotlinGradle {
-        ktlint(ktlintVersion)
     }
 }
 
