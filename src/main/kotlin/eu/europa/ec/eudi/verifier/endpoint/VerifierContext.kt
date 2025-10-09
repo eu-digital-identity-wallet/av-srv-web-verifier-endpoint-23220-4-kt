@@ -90,6 +90,7 @@ import org.springframework.security.config.web.server.invoke
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.reactive.CorsConfigurationSource
 import java.net.URI
+import java.nio.file.Files
 import java.security.KeyStore
 import java.security.cert.X509Certificate
 import java.time.Clock
@@ -609,7 +610,19 @@ private fun Environment.trustSources(resourceLoader: ResourceLoader): Map<Regex,
         // Parse LOTL configuration if present
         val lotlSourceConfig = getPropertyOrEnvVariable("$indexPrefix.lotl.location")?.takeIf { it.isNotBlank() }?.let { lotlLocation ->
             val location = if (lotlLocation.startsWith("classpath:")) {
-                resourceLoader.getResource(lotlLocation).url
+                val resource = resourceLoader.getResource(lotlLocation)
+                if (resource.url.protocol == "jar") {
+                    val tempFile = Files.createTempFile("lotl-", ".xml").toFile()
+                    tempFile.deleteOnExit()
+                    resource.inputStream.use { input ->
+                        tempFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    tempFile.toURI().toURL()
+                } else {
+                    resource.url
+                }
             } else {
                 URI(lotlLocation).toURL()
             }
@@ -626,7 +639,19 @@ private fun Environment.trustSources(resourceLoader: ResourceLoader): Map<Regex,
         // Parse TL configuration if present
         val tlSourceConfig = getPropertyOrEnvVariable("$indexPrefix.tl.location")?.takeIf { it.isNotBlank() }?.let { tlLocation ->
             val location = if (tlLocation.startsWith("classpath:")) {
-                resourceLoader.getResource(tlLocation).url
+                val resource = resourceLoader.getResource(tlLocation)
+                if (resource.url.protocol == "jar") {
+                    val tempFile = Files.createTempFile("tl-", ".xml").toFile()
+                    tempFile.deleteOnExit()
+                    resource.inputStream.use { input ->
+                        tempFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    tempFile.toURI().toURL()
+                } else {
+                    resource.url
+                }
             } else {
                 URI(tlLocation).toURL()
             }
